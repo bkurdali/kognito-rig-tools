@@ -18,46 +18,6 @@ class RigCopyBoneTransforms(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class RigToggleHandFollow(bpy.types.Operator):
-    """Toggle Hand Follows Torso for IK hands"""
-    bl_idname = "pose.rig_toggle_hand_follow"
-    bl_label = "Toggle IK hand follow torso"
-    bl_context = "pose"
-
-    @classmethod
-    def poll(cls, context):
-        return (
-            context.mode == 'POSE' and
-            context.active_object.name == 'rig_ctrl')
-
-    def execute(self, context):
-        hand_ik_bones = [
-            bone for bone in context.active_object.pose.bones
-            if bone.name.startswith('forearm_ik')]
-        constraints_toggle_child_of(hand_ik_bones)
-        return {'FINISHED'}
-
-
-class RigToggleHandInheritRotation(bpy.types.Operator):
-    """Toggle Hands inheriting rotation"""
-    bl_idname = "pose.rig_toggle_hand_inherit_rotation"
-    bl_label = "Toggle Hand inherit rotation"
-    bl_context = "pose"
-
-    @classmethod
-    def poll(cls, context):
-        return (
-            context.mode == 'POSE'and
-            context.active_object.name == 'rig_ctrl')
-
-    def execute(self, context):
-        hand_bones = [
-            bone for bone in context.active_object.pose.bones
-            if bone.name.startswith('hand.')]
-        bones_toggle_property(hand_bones, 'use_inherit_rotation')
-        return {'FINISHED'}
-
-
 class RigORGDeform(bpy.types.Operator):
     """Toggle Deform option on all selected bones"""
     bl_idname = "pose.rig_org_to_deform"
@@ -89,11 +49,6 @@ class RigUnityUtils(bpy.types.Panel):
         col.operator('pose.rig_org_to_deform')
         col.operator('pose.rig_copy_bone_transforms')
 
-        col = layout.column(align=True)
-        col.label('Pose Utilities')
-        col.operator('pose.rig_toggle_hand_follow')
-        col.operator('pose.rig_toggle_hand_inherit_rotation')
-
 
 def find_or_add_constraint(bone, constraint):
     con = [con for con in bone.constraints if con.type in constraint]
@@ -102,18 +57,6 @@ def find_or_add_constraint(bone, constraint):
     else:
         con = con[0]
     return con
-
-
-def constraints_toggle_child_of(bones):
-    for bone in bones:
-        child_of = find_or_add_constraint(bone, 'CHILD_OF')
-        child_of.influence = 1 if child_of.influence == 0 else 0
-
-
-def bones_toggle_property(bones, property_name):
-    for bone in bones:
-        prop_value = getattr(bone.bone, property_name)
-        setattr(bone.bone, property_name, not prop_value)
 
 
 def bones_swap_org_def(bones):

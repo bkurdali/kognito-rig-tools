@@ -3,6 +3,46 @@ from mathutils import Vector, Matrix, Euler, Quaternion
 from mathutils.geometry import normal, intersect_point_line
 
 
+class RigToggleHandFollow(bpy.types.Operator):
+    """Toggle Hand Follows Torso for IK hands"""
+    bl_idname = "pose.rig_toggle_hand_follow"
+    bl_label = "Toggle IK hand follow torso"
+    bl_context = "pose"
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.mode == 'POSE' and
+            context.active_object.name == 'rig_ctrl')
+
+    def execute(self, context):
+        hand_ik_bones = [
+            bone for bone in context.active_object.pose.bones
+            if bone.name.startswith('forearm_ik')]
+        constraints_toggle_child_of(hand_ik_bones)
+        return {'FINISHED'}
+
+
+class RigToggleHandInheritRotation(bpy.types.Operator):
+    """Toggle Hands inheriting rotation"""
+    bl_idname = "pose.rig_toggle_hand_inherit_rotation"
+    bl_label = "Toggle Hand inherit rotation"
+    bl_context = "pose"
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.mode == 'POSE'and
+            context.active_object.name == 'rig_ctrl')
+
+    def execute(self, context):
+        hand_bones = [
+            bone for bone in context.active_object.pose.bones
+            if bone.name.startswith('hand.')]
+        bones_toggle_property(hand_bones, 'use_inherit_rotation')
+        return {'FINISHED'}
+
+
 class FKIKSwitcher(bpy.types.Operator):
     """
     Universal IKFK methods coupled with explict rig bone/constraint definitions
@@ -73,6 +113,18 @@ class FKIKSwitcher(bpy.types.Operator):
             self.fk_match(ob, chain, iks)
             prop_holder[prop] = 0.0
         return {'FINISHED'}
+
+
+def constraints_toggle_child_of(bones):
+    for bone in bones:
+        child_of = find_or_add_constraint(bone, 'CHILD_OF')
+        child_of.influence = 1 if child_of.influence == 0 else 0
+
+
+def bones_toggle_property(bones, property_name):
+    for bone in bones:
+        prop_value = getattr(bone.bone, property_name)
+        setattr(bone.bone, property_name, not prop_value)
 
 
 def bake_rotation_scale(bone):
@@ -221,6 +273,13 @@ class KognitoPanel(bpy.types.Panel):
 
         fk_ik_controls(box, 'right', '["IK_arms.R"]')
         fk_ik_controls(box, 'left', '["IK_arms.L"]')
+
+        box = layout.box()
+        box.label("Toggles:")
+        row = box.row(align=True)
+        row.operator('pose.rig_toggle_hand_follow', text="Hands follow")
+        row.operator('pose.rig_toggle_hand_inherit_rotation', text="Hands rotate")
+
         box = layout.box()
         box.label("Show/Hide:")
 
