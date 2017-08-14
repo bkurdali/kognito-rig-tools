@@ -297,6 +297,6 @@ def unregister():
     bpy.utils.unregister_class(KognitoPanel )
     bpy.utils.unregister_class(FKIKSwitcher)
 
-
-register()
+if __name__ == "__main__":
+    register()
 
