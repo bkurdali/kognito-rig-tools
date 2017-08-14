@@ -11,7 +11,7 @@ class FKIKSwitcher(bpy.types.Operator):
     bl_idname = 'pose.kognito_fkik'
     bl_label = 'Kognito Rig FK IK Switch'
     bl_description = 'Kognito rig FK IK seamless switcher'
-    
+
     ik = bpy.props.BoolProperty(default=True)
     side = bpy.props.EnumProperty(
         items=[('left', 'left', 'left'), ('right', 'right', 'right')])
@@ -40,7 +40,7 @@ class FKIKSwitcher(bpy.types.Operator):
         use_tail = False
         loc_copy(source, target, use_tail)
         rot_copy(source, target)
-        #use the pole angle to figure out the rest
+        # use the pole angle to figure out the rest
         constraints = (
             c for c in ob.pose.bones[chain[-2]].constraints if c.type == 'IK'
             )
@@ -53,7 +53,7 @@ class FKIKSwitcher(bpy.types.Operator):
             pole_angle)
         for bone in chain:
             ob.pose.bones[bone].matrix_basis = Matrix()
-        
+
     def execute(self, context):
         ob = context.object
         suffix = self.suffixes[self.side]
@@ -65,7 +65,6 @@ class FKIKSwitcher(bpy.types.Operator):
         if self.ik:
             ob.data.layers[self.layers[self.side][-1]] = True
             ob.data.layers[self.layers[self.side][0]] = False
-            # prop_holder[prop] = 1.0; return {'CANCELLED'} # comment out for proper operation
             self.ik_match(ob, chain, iks)
             prop_holder[prop] = 1.0
         else:
@@ -95,17 +94,17 @@ def bake_rotation_scale(bone):
             parented_mat if data_bone.use_inherit_rotation else parentless_mat)
         scale_mat = (
             parented_mat if data_bone.use_inherit_scale else parentless_mat)
-        
+
     if bone.rotation_mode == 'AXIS_ANGLE':
-        bone.rotation_axis_angle= rot_mat.to_quaternion().to_axis_angle()
+        bone.rotation_axis_angle = rot_mat.to_quaternion().to_axis_angle()
     elif bone.rotation_mode == 'QUATERNION':
         bone.rotation_quaternion = rot_mat.to_quaternion()
     else:
         bone.rotation_euler = rot_mat.to_euler(
             bone.rotation_mode, bone.rotation_euler)
     bone.scale = scale_mat.to_scale()
-    
-    
+
+
 def loc_copy(source, target, use_tail):
     data_target = target.id_data.data.bones[target.name]
     target_mat = data_target.matrix_local
@@ -126,7 +125,7 @@ def loc_copy(source, target, use_tail):
     else:
         target.location = target_mat.inverted() * location
 
-        
+
 def rot_copy(source, target):
     """ duplicates code from loc_copy, should be refactored """
     data_target = target.id_data.data.bones[target.name]
@@ -145,67 +144,47 @@ def rot_copy(source, target):
         mat = (
             parented_mat if data_bone.use_inherit_rotation else parentless_mat)
     if target.rotation_mode == 'AXIS_ANGLE':
-        target.rotation_axis_angle= mat.to_quaternion().to_axis_angle()
+        target.rotation_axis_angle = mat.to_quaternion().to_axis_angle()
     elif target.rotation_mode == 'QUATERNION':
         target.rotation_quaternion = mat.to_quaternion()
     else:
         target.rotation_euler = mat.to_euler(
-            target.rotation_mode, target.rotation_euler)   
-        
+            target.rotation_mode, target.rotation_euler)
+
 
 def genericmat(bone, mat, ignoreparent):
     '''
     Puts the matrix mat from armature space into bone space
     '''
     data_bone = bone.id_data.data.bones[bone.name]
-    bonemat_local = data_bone.matrix_local #self rest matrix
+    bonemat_local = data_bone.matrix_local  # self rest matrix
     if bone.parent:
         parentposemat = bone.parent.matrix
         parentbonemat = data_bone.parent.matrix_local
     else:
         parentposemat = None
         parentbonemat = None
-    if parentbonemat == None or ignoreparent:
+    if parentbonemat is None or ignoreparent:
         newmat = bonemat_local.inverted() * mat
     else:
         bonemat = parentbonemat.inverted() * bonemat_local
         newmat = bonemat.inverted() * parentposemat.inverted() * mat
     return newmat
 
-    
+
 def pole_position(chain, pole, pole_angle):
     """
     pole target based on roll angle of chain base
     """
-    #Poll target for elbow is on the + X axis, for the knee we need to lock
-    #the elbow to rotate along one axis only
+    # Poll target for elbow is on the + X axis, for the knee we need to lock
+    # the elbow to rotate along one axis only
     vec = Vector((4, 0.0, 0.0))
     vec.rotate(Euler((0, -pole_angle, 0)))
     offmatelbow = Matrix.Translation(vec)
-    
     offmatarm = chain[0].matrix * offmatelbow
 
-
-    pole.location = genericmat(pole,
-       offmatarm, False).to_translation()
+    pole.location = genericmat(pole, offmatarm, False).to_translation()
     return
-    
-    
-    
-    
-    
-    coordinate_system = chain[0].matrix
-    line_points = [
-        chain[0].matrix.to_translation(),
-        chain[-2].tail]
-    mid_point =chain[-2].matrix.to_translation()
-    center, dummy = intersect_point_line(mid_point, line_points[0], line_points[1])
-    radius = (mid_point - center).length
-    vector = Vector((1.2 * radius, 0, 0))
-    vector = Vector((.5, 0,0))
-    # rotation = Quaternion(Vector((0, 1, 0)), pole_angle)
-    # vector.rotate(rotation)
-    pole.location = coordinate_system * vector
 
 
 class KognitoPanel(bpy.types.Panel):
@@ -216,7 +195,7 @@ class KognitoPanel(bpy.types.Panel):
     bl_region_type = 'TOOLS'
     bl_category = "Kognito"
     bl_context = "posemode"
-    
+
     @classmethod
     def poll(cls, context):
         return 'kognito_rig' in context.object.keys()
@@ -228,6 +207,7 @@ class KognitoPanel(bpy.types.Panel):
         props = ob.pose.bones["props"]
         box = layout.box()
         box.label("IK/FK arms:")
+
         def fk_ik_controls(layout, side, prop):
 
             def clicker(layout, side, state, icon):
@@ -236,7 +216,7 @@ class KognitoPanel(bpy.types.Panel):
 
             row = layout.row(align=True)
             clicker(row, side, False, 'TRIA_LEFT')
-            row.prop(props, prop,text=side)
+            row.prop(props, prop, text=side)
             clicker(row, side, True, 'TRIA_RIGHT')
 
         fk_ik_controls(box, 'right', '["IK_arms.R"]')
@@ -244,7 +224,7 @@ class KognitoPanel(bpy.types.Panel):
         box = layout.box()
         box.label("Show/Hide:")
 
-        row=box.row(align=True)
+        row = box.row(align=True)
         row.scale_y = 2
         row.prop(ob.data, "layers", index=0, text="Head FK", toggle=True)
 
@@ -274,10 +254,9 @@ class KognitoPanel(bpy.types.Panel):
         row = col.row(align=True)
         row.prop(ob.data, "layers", index=3, text="Tweak", toggle=True)
 
-        row=box.row(align=True)
+        row = box.row(align=True)
         row.scale_y = 2
         row.prop(ob.data, "layers", index=2, text="Torso FK", toggle=True)
-
 
         col = box.column(align=True)
         row = col.row(align=True)
@@ -294,9 +273,8 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(KognitoPanel )
+    bpy.utils.unregister_class(KognitoPanel)
     bpy.utils.unregister_class(FKIKSwitcher)
 
 if __name__ == "__main__":
     register()
-
