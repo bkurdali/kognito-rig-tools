@@ -1,16 +1,3 @@
-bl_info = {
-    "name":        "Kognito Rig Tools",
-    "description": "A set of tools to aid in the generation of effective rigs for Unity characters",
-    "author":      "Jonathan Williamson",
-    "version":     (0, 0, 2),
-    "blender":     (2, 7, 8),
-    "location":    "View 3D > Properties",
-    "warning":     "",  # used for warning icon and text in addons panel
-    "wiki_url":    "",
-    "tracker_url": "",
-    "category":    "Rigging"
-    }
-
 import bpy
 
 class RigCopyBoneTransforms(bpy.types.Operator):
