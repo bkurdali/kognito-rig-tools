@@ -1,6 +1,26 @@
 import bpy
 
 
+class RigLinkFaceBones(bpy.types.Operator):
+    """ Add Copy Transforms constraint to face bones during setup """
+    bl_idname = "pose.rig_face_link"
+    bl_label = "Add copy transforms onto face rig"
+    bl_context = "pose"
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            len(context.selected_objects) == 2 and
+            context.object and
+            all(ob.type == 'ARMATURE' for ob in context.selected_objects))
+
+    def execute(self, context):
+        active = context.active_object
+        selected = [
+            ob for ob in in context.selected_objects if ob is not active][0]
+        face_link(active, selected)
+
+
 class RigCopyBoneTransforms(bpy.types.Operator):
     """Copy bone transformms from a source armature to a target"""
     bl_idname = "pose.rig_copy_bone_transforms"
@@ -48,6 +68,18 @@ class RigUnityUtils(bpy.types.Panel):
         col.label('Bone Utilities')
         col.operator('pose.rig_org_to_deform')
         col.operator('pose.rig_copy_bone_transforms')
+
+
+def face_link(ctr, rig):
+    """ Link via constraint def rig to control rig """
+    deform_face_layer = 16
+    for bone in rig.pose.bones:
+        dbone = rig.data.bones[bone.name]
+        if dbone.layers[16]:
+            ctr_bone = bone.name.replace('GEO_', '')
+            cons = bone.constraints.new('COPY_TRANSFORMS')
+            cons.target = ctr
+            cons.subtarget = ctr_bone
 
 
 def find_or_add_constraint(bone, constraint):
