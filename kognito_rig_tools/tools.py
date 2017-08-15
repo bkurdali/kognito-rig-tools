@@ -25,16 +25,21 @@ class RigCopyBoneTransforms(bpy.types.Operator):
     """Copy bone transformms from a source armature to a target"""
     bl_idname = "pose.rig_copy_bone_transforms"
     bl_label = "Copy Bone XForms from Source to Target"
-    bl_context = "object"
 
     @classmethod
     def poll(cls, context):
-        return context.mode == 'OBJECT'
+        return (
+            context.mode == 'OBJECT' or
+            (context.mode == 'POSE' and context.selected_pose_bones))
 
     def execute(self, context):
         source = context.active_object
         target = [obj for obj in context.selected_objects if obj != source][0]
-        copy_bone_transforms(source, target)
+        if context.mode == 'OBJECT':
+            copy_bone_transforms(source, target)
+        else:
+            bones = [b.name for b in context.selected_pose_bones]
+            copy_bone_transforms(source, target, bones)
         return {'FINISHED'}
 
 
@@ -96,16 +101,19 @@ def bones_swap_org_def(bones):
         bone.bone.use_deform = not bone.bone.use_deform
 
 
-def copy_bone_transforms(source, target):
+def copy_bone_transforms(source, target, bones=None):
     # thanks to https://blender.stackexchange.com/a/15940
     # Assume, that context.object is an armature
     context = bpy.context
     scene = context.scene
-
     # Store the bone data of source:
     bpy.ops.object.mode_set(mode='EDIT')
     bone_store = []
-    for ebone in source.data.edit_bones:
+    if bones:
+        source_bones = (source.data.edit_bones[b] for b in bones)
+    else:
+        source_bones = source.data.edit_bones
+    for ebone in source_bones:
         bone_store.append([
             ebone.name, ebone.head.copy(), ebone.tail.copy(), ebone.roll])
     bpy.ops.object.mode_set(mode='OBJECT')
