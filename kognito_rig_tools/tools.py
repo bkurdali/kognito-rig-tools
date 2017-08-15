@@ -17,7 +17,7 @@ class RigLinkFaceBones(bpy.types.Operator):
     def execute(self, context):
         active = context.active_object
         selected = [
-            ob for ob in in context.selected_objects if ob is not active][0]
+            ob for ob in context.selected_objects if ob is not active][0]
         face_link(active, selected)
 
 
@@ -141,16 +141,12 @@ def copy_bone_transforms(source, target, bones=None):
 def register():
     bpy.utils.register_class(RigUnityUtils)
     bpy.utils.register_class(RigCopyBoneTransforms)
-    bpy.utils.register_class(RigToggleHandFollow)
-    bpy.utils.register_class(RigToggleHandInheritRotation)
     bpy.utils.register_class(RigORGDeform)
 
 
 def unregister():
     bpy.utils.unregister_class(RigUnityUtils)
     bpy.utils.unregister_class(RigCopyBoneTransforms)
-    bpy.utils.unregister_class(RigToggleHandFollow)
-    bpy.utils.unregister_class(RigToggleHandInheritRotation)
     bpy.utils.unregister_class(RigORGDeform)
 
 if __name__ == "__main__":

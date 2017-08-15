@@ -18,7 +18,7 @@ if "bpy" in locals():
     importlib.reload(ui)
     importlib.reload(tools)
 
-else
+else:
     from . import ui
     from . import tools
 
