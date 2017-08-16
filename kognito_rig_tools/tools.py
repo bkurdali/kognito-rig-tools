@@ -133,8 +133,21 @@ def copy_bone_transforms(source, target, bones=None):
             ebone.tail = bone_data[2].copy()
             ebone.roll = bone_data[3]
 
+    # If bone length has been altered we need to reset stretch to rest length
+    bpy.ops.object.mode_set(mode='POSE')
+    target.data.pose_position = 'REST'
+    target.update_tag()
+    bpy.context.scene.update()
+    pbones = target.pose.bones
+    for bone_data in bone_store:
+        bid = bone_data[0]
+        if bid in pbones:
+            pbone = pbones[bid]
+            for constraint in pbone.constraints:
+                if constraint.type == 'STRETCH_TO':
+                    constraint.rest_length = pbone.length
+    target.data.pose_position = 'POSE'
     bpy.ops.object.mode_set(mode='OBJECT')
-
     scene.objects.active = source
 
 
