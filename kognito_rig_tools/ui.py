@@ -327,13 +327,17 @@ class KognitoPanel(bpy.types.Panel):
 
 
 def register():
-    bpy.utils.register_class(KognitoPanel)
+    bpy.utils.register_class(RigToggleHandFollow)
+    bpy.utils.register_class(RigToggleHandInheritRotation)
     bpy.utils.register_class(FKIKSwitcher)
+    bpy.utils.register_class(KognitoPanel)
 
 
 def unregister():
     bpy.utils.unregister_class(KognitoPanel)
     bpy.utils.unregister_class(FKIKSwitcher)
+    bpy.utils.unregister_class(RigToggleHandFollow)
+    bpy.utils.unregister_class(RigToggleHandInheritRotation)
 
 if __name__ == "__main__":
     register()
