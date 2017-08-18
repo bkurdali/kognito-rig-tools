@@ -58,7 +58,7 @@ class FKIKSwitcher(bpy.types.Operator):
 
     # should later use some kind of preset/config system
     chain = ['upper_arm', 'forearm', 'hand']
-    iks = ['forearm_ik_pole', 'forearm_ik']
+    iks = ['forearm_ik_pole', 'arm_IK']
     suffixes = {'left': '.L', 'right': '.R'}
     prop = ['props', 'IK_arms']
     layers = {'left': [6, 5], 'right': [9, 8]}
@@ -77,16 +77,23 @@ class FKIKSwitcher(bpy.types.Operator):
     def ik_match(self, ob, chain, iks):
         target = ob.pose.bones[iks[-1]]
         source = ob.pose.bones[chain[-1]]
-        use_tail = False
-        loc_copy(source, target, use_tail)
-        rot_copy(source, target)
-        # use the pole angle to figure out the rest
         constraints = (
             c for c in ob.pose.bones[chain[-2]].constraints if c.type == 'IK'
             )
         for constraint in constraints:
             pole_angle = constraint.pole_angle
-            print(pole_angle)
+            actual_ik = ob.pose.bones[constraint.subtarget]
+        use_tail = False
+        if not actual_ik is target:
+            # calculate offset
+            target_rest = ob.data.bones[target.name].matrix_local
+            actual_rest = ob.data.bones[actual_ik.name].matrix_local
+            offset = actual_rest.inverted() * target_rest
+        else:
+            offset = None
+        loc_copy(source, target, use_tail, offset)
+        rot_copy(source, target, offset)
+        # use the pole angle to figure out the rest
         pole_position(
             [ob.pose.bones[b] for b in chain],
             ob.pose.bones[iks[0]],
@@ -157,7 +164,7 @@ def bake_rotation_scale(bone):
     bone.scale = scale_mat.to_scale()
 
 
-def loc_copy(source, target, use_tail):
+def loc_copy(source, target, use_tail, offset):
     data_target = target.id_data.data.bones[target.name]
     target_mat = data_target.matrix_local
     if not data_target.use_local_location:
@@ -176,9 +183,11 @@ def loc_copy(source, target, use_tail):
             )
     else:
         target.location = target_mat.inverted() * location
+    if offset:
+        target.location = target.location + offset.to_translation()
 
 
-def rot_copy(source, target):
+def rot_copy(source, target, offset):
     """ duplicates code from loc_copy, should be refactored """
     data_target = target.id_data.data.bones[target.name]
     target_mat = data_target.matrix_local
@@ -195,6 +204,11 @@ def rot_copy(source, target):
             )
         mat = (
             parented_mat if data_target.use_inherit_rotation else parentless_mat)
+    if offset:
+        offset_rot = offset.to_3x3()
+        quat = mat.to_quaternion()
+        offset_rot.rotate(quat)
+        mat = offset_rot
     if target.rotation_mode == 'AXIS_ANGLE':
         target.rotation_axis_angle = mat.to_quaternion().to_axis_angle()
     elif target.rotation_mode == 'QUATERNION':
@@ -202,6 +216,7 @@ def rot_copy(source, target):
     else:
         target.rotation_euler = mat.to_euler(
             target.rotation_mode, target.rotation_euler)
+
 
 
 def genericmat(bone, mat, ignoreparent):
@@ -230,8 +245,12 @@ def pole_position(chain, pole, pole_angle):
     """
     # Poll target for elbow is on the + X axis, for the knee we need to lock
     # the elbow to rotate along one axis only
-    vec = Vector((4, 0.0, 0.0))
-    vec.rotate(Euler((0, -pole_angle, 0)))
+    chain_0_data = chain[0].id_data.data.bones[chain[0].name]
+    pole_data = pole.id_data.data.bones[pole.name]
+    offmatelbow = chain_0_data.matrix_local.inverted() * pole_data.matrix_local
+    vec = offmatelbow.to_translation()
+    # vec = Vector((4, 0.0, 0.0))
+    # vec.rotate(Euler((0, -pole_angle, 0)))
     offmatelbow = Matrix.Translation(vec)
     offmatarm = chain[0].matrix * offmatelbow
 
