@@ -167,8 +167,8 @@ def loc_copy(source, target, use_tail):
     else:
         location = source.matrix.to_translation()
     if target.parent:
-        parentposemat = bone.parent.matrix
-        parentbonemat = data_bone.parent.matrix_local
+        parentposemat = target.parent.matrix
+        parentbonemat = data_target.parent.matrix_local
         target.location = (
             (parentbonemat.inverted() * target_mat).inverted() *
             parentposemat.inverted() *
@@ -189,12 +189,12 @@ def rot_copy(source, target):
         parentposemat = target.parent.matrix
         parentbonemat = data_target.parent.matrix_local
         parented_mat = (
-            (parentbonemat.inverted() * bone_mat).inverted() *
+            (parentbonemat.inverted() * target_mat).inverted() *
             parentposemat.inverted() *
             source.matrix
             )
         mat = (
-            parented_mat if data_bone.use_inherit_rotation else parentless_mat)
+            parented_mat if data_target.use_inherit_rotation else parentless_mat)
     if target.rotation_mode == 'AXIS_ANGLE':
         target.rotation_axis_angle = mat.to_quaternion().to_axis_angle()
     elif target.rotation_mode == 'QUATERNION':
