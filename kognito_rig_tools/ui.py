@@ -122,6 +122,16 @@ class FKIKSwitcher(bpy.types.Operator):
         return {'FINISHED'}
 
 
+
+def find_or_add_constraint(bone, constraint):
+    con = [con for con in bone.constraints if con.type in constraint]
+    if not con:
+        con = bone.constraints.new(type=constraint)
+    else:
+        con = con[0]
+    return con
+
+
 def constraints_toggle_child_of(bones):
     for bone in bones:
         child_of = find_or_add_constraint(bone, 'CHILD_OF')
