@@ -268,8 +268,30 @@ def pole_position(chain, pole, pole_angle):
     return
 
 
+class KognitoShapePanel(bpy.types.Panel):
+    """Kognito Shape Manipulation tools"""
+    bl_label = "Shape Control"
+    bl_idname = "VIEW_3D_PT_KOGNITO_SHAPE"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Kognito"
+    bl_context = "posemode"
+
+    @classmethod
+    def poll(cls, context):
+        return 'kognito_rig' in context.object.keys()
+
+    def draw(self, context):
+        layout = self.layout
+        ob = context.object
+        props = ob.pose.bones["props"]
+
+        row = layout.row(align=True)
+        row.prop(props, '["scale_arms"]', text="Scale Arms")
+
+
 class KognitoPanel(bpy.types.Panel):
-    """Creates a Panel in the scene context of the properties editor"""
+    """Kognito Animator's tools"""
     bl_label = "Rig Control"
     bl_idname = "VIEW_3D_PT_KOGNITO"
     bl_space_type = 'VIEW_3D'
@@ -360,9 +382,11 @@ def register():
     bpy.utils.register_class(RigToggleHandInheritRotation)
     bpy.utils.register_class(FKIKSwitcher)
     bpy.utils.register_class(KognitoPanel)
+    bpy.utils.register_class(KognitoShapePanel)
 
 
 def unregister():
+    bpy.utils.unregister_class(KognitoShapePanel)
     bpy.utils.unregister_class(KognitoPanel)
     bpy.utils.unregister_class(FKIKSwitcher)
     bpy.utils.unregister_class(RigToggleHandFollow)
