@@ -250,7 +250,7 @@ def pole_position(chain, pole, pole_angle):
     offmatelbow = chain_0_data.matrix_local.inverted() * pole_data.matrix_local
     vec = offmatelbow.to_translation()
     # vec = Vector((4, 0.0, 0.0))
-    # vec.rotate(Euler((0, -pole_angle, 0)))
+    vec.rotate(Euler((0, -pole_angle, 0)))
     offmatelbow = Matrix.Translation(vec)
     offmatarm = chain[0].matrix * offmatelbow
 
