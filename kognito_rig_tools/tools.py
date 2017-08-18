@@ -63,8 +63,9 @@ class RigUnityUtils(bpy.types.Panel):
     bl_label = "Rig to Unity"
     bl_idname = "POSE_RIG_TO_UNITY"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = "POSE"
+    bl_region_type = 'TOOLS'
+    bl_category = "Kognito"
+    # bl_context = "POSE"
 
     def draw(self, context):
         layout = self.layout

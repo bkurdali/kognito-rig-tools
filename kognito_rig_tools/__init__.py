@@ -27,8 +27,9 @@ import bpy
 
 def register():
     """ Just use register functions from the various submodules """
-    tools.register()
     ui.register()
+    tools.register()
+
 
 
 def unregister():
