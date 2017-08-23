@@ -288,6 +288,8 @@ class KognitoShapePanel(bpy.types.Panel):
 
         row = layout.row(align=True)
         row.prop(props, '["scale_arms"]', text="Scale Arms")
+        row = layout.row(align=True)
+        row.prop(props, '["scale_legs"]', text="Scale Legs")
 
 
 class KognitoPanel(bpy.types.Panel):
